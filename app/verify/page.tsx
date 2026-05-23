@@ -14,7 +14,8 @@ export default function VerifyPage() {
     setErrorMsg('')
 
     try {
-      const { MiniKit } = await import('@worldcoin/minikit-js')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { MiniKit } = await import('@worldcoin/minikit-js') as any
 
       if (!MiniKit.isInstalled()) {
         setErrorMsg('Please open WorldX inside World App.')

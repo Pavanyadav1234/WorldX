@@ -25,7 +25,7 @@ export default function VerifyPage() {
 
       const result = await MiniKit.commandsAsync.verify({
         action: 'worldx-verify',
-        verification_level: 'orb',
+        verification_level: 'device',
       })
 
       if (result.finalPayload.status === 'error') {

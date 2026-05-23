@@ -74,7 +74,7 @@ export default function VerifyPage() {
       <p className="text-gray-400 text-sm text-center mb-10 max-w-xs">
         {status === 'success'
           ? 'Taking you to WorldX…'
-          : 'We use World ID to confirm you're a unique human. No personal data is stored.'}
+          : "We use World ID to confirm you're a unique human. No personal data is stored."}
       </p>
 
       {status !== 'success' && (

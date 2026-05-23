@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 export default function SplashPage() {
   const [go, setGo] = useState(false)
 
-  useEffect(() => {
-    const timer = setTimeout(() => setGo(true), 2000)
-    return () => clearTimeout(timer)
-  }, [])
+  export default function Page() {
+  return null
+}
 
   useEffect(() => {
     if (go) {

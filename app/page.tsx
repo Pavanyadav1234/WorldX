@@ -7,6 +7,7 @@ export default function SplashPage() {
   export default function Page() {
   return null
 }
+}
 
   useEffect(() => {
     if (go) {

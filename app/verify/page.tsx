@@ -14,11 +14,10 @@ export default function VerifyPage() {
     setErrorMsg('')
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { MiniKit } = await import('@worldcoin/minikit-js') as any
 
       if (!MiniKit.isInstalled()) {
-        setErrorMsg('Please open WorldX inside World App.')
+        setErrorMsg('MiniKit not installed - open inside World App')
         setStatus('error')
         return
       }
@@ -28,8 +27,16 @@ export default function VerifyPage() {
         verification_level: 'device',
       })
 
+      console.log('Verify result:', JSON.stringify(result))
+
+      if (!result || !result.finalPayload) {
+        setErrorMsg('No response from World App')
+        setStatus('error')
+        return
+      }
+
       if (result.finalPayload.status === 'error') {
-        setErrorMsg('Verification was cancelled or failed.')
+        setErrorMsg('Error: ' + JSON.stringify(result.finalPayload))
         setStatus('error')
         return
       }
@@ -40,15 +47,18 @@ export default function VerifyPage() {
         body: JSON.stringify({ payload: result.finalPayload }),
       })
 
+      const data = await res.json()
+      console.log('API response:', JSON.stringify(data))
+
       if (res.ok) {
         setStatus('success')
         setTimeout(() => router.push('/home'), 1200)
       } else {
-        setErrorMsg('Server verification failed. Please try again.')
+        setErrorMsg('API error: ' + JSON.stringify(data))
         setStatus('error')
       }
-    } catch {
-      setErrorMsg('Something went wrong. Please try again.')
+    } catch (e: any) {
+      setErrorMsg('Exception: ' + e?.message)
       setStatus('error')
     }
   }
@@ -91,17 +101,17 @@ export default function VerifyPage() {
               Verifying...
             </span>
           ) : (
-            'Verify with Orb'
+            'Verify with World ID'
           )}
         </button>
       )}
 
       {status === 'error' && (
-        <p className="text-red-400 text-sm mt-4 text-center">{errorMsg}</p>
+        <p className="text-red-400 text-xs mt-4 text-center break-all px-2">{errorMsg}</p>
       )}
 
       <p className="text-gray-300 text-xs mt-10 text-center">
-        Orb-level verification · Powered by Worldcoin
+        Powered by Worldcoin
       </p>
     </div>
   )

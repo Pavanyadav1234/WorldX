@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const assets = [
   { symbol: 'WLD', name: 'Worldcoin', amount: '245.50', value: '697.22', change: '+5.32', positive: true },
@@ -12,6 +13,7 @@ const assets = [
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('Portfolio')
   const total = assets.reduce((sum, a) => sum + parseFloat(a.value), 0)
+  const router = useRouter()
 
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">

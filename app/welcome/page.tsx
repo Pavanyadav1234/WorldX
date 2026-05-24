@@ -1,30 +1,41 @@
 'use client'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const features = [
-  {
-    icon: '◎',
-    title: 'Trade crypto instantly',
-    desc: 'Buy and sell BTC, ETH, SOL, WLD and more in seconds.',
-  },
-  {
-    icon: '⬡',
-    title: 'Verified humans only',
-    desc: 'Powered by World ID — no bots, no duplicates.',
-  },
-  {
-    icon: '↗',
-    title: 'Live market data',
-    desc: 'Real-time prices, charts and portfolio tracking.',
-  },
+  { icon: '◎', title: 'Trade crypto instantly', desc: 'Buy and sell BTC, ETH, SOL, WLD and more in seconds.' },
+  { icon: '⬡', title: 'Verified humans only', desc: 'Powered by World ID — no bots, no duplicates.' },
+  { icon: '↗', title: 'Live market data', desc: 'Real-time prices, charts and portfolio tracking.' },
 ]
 
 export default function WelcomePage() {
   const router = useRouter()
 
+  useEffect(() => {
+    const autoConnect = async () => {
+      try {
+        const { MiniKit } = await import('@worldcoin/minikit-js') as any
+        if (!MiniKit.isInstalled()) return
+
+        const result = await MiniKit.walletAuth({
+          nonce: Math.random().toString(36).substring(2),
+          statement: 'Sign in to WorldX',
+        })
+
+        const address = result?.finalPayload?.address || MiniKit.walletAddress || ''
+        if (address) {
+          localStorage.setItem('worldx_address', address)
+        }
+        router.push('/home')
+      } catch (e) {
+        console.log('Auto connect failed:', e)
+      }
+    }
+    autoConnect()
+  }, [router])
+
   return (
     <div className="flex flex-col min-h-screen bg-white px-6 pt-16 pb-10">
-      {/* Header */}
       <div className="mb-12">
         <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-6">
           <div className="w-6 h-6 rounded-full border border-white opacity-70" />
@@ -37,7 +48,6 @@ export default function WelcomePage() {
         </p>
       </div>
 
-      {/* Features */}
       <div className="flex flex-col gap-6 flex-1">
         {features.map((f) => (
           <div key={f.title} className="flex items-start gap-4">
@@ -52,7 +62,6 @@ export default function WelcomePage() {
         ))}
       </div>
 
-      {/* CTA */}
       <div className="mt-10 flex flex-col gap-3">
         <button
           onClick={() => router.push('/verify')}

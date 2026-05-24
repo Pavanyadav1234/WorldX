@@ -42,7 +42,7 @@ export default function VerifyPage() {
         }
       })
 
-      MiniKit.commands.verify({
+      MiniKit.verify({
         action: 'worldx-verify',
         verification_level: 'device',
       })

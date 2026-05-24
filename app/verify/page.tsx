@@ -14,14 +14,15 @@ export default function VerifyPage() {
     setErrorMsg('')
     try {
       const { MiniKit } = await import('@worldcoin/minikit-js') as any
+
       if (!MiniKit.isInstalled()) {
         setErrorMsg('Please open inside World App')
         setStatus('error')
         return
       }
-      const { ResponseEvent } = await import('@worldcoin/minikit-js') as any
-      MiniKit.subscribe(ResponseEvent.MiniAppVerifyAction, async (payload: any) => {
-        MiniKit.unsubscribe(ResponseEvent.MiniAppVerifyAction)
+
+      MiniKit.subscribe('miniapp-verify-action', async (payload: any) => {
+        MiniKit.unsubscribe('miniapp-verify-action')
         if (payload.status === 'error') {
           setErrorMsg('Error: ' + payload.error_code)
           setStatus('error')
@@ -40,10 +41,12 @@ export default function VerifyPage() {
           setStatus('error')
         }
       })
+
       MiniKit.commands.verify({
         action: 'worldx-verify',
         verification_level: 'device',
       })
+
     } catch (e: any) {
       setErrorMsg('Error: ' + e?.message)
       setStatus('error')

@@ -12,53 +12,40 @@ export default function VerifyPage() {
   async function handleVerify() {
     setStatus('loading')
     setErrorMsg('')
-
     try {
       const { MiniKit } = await import('@worldcoin/minikit-js') as any
-
       if (!MiniKit.isInstalled()) {
-        setErrorMsg('MiniKit not installed - open inside World App')
+        setErrorMsg('Please open inside World App')
         setStatus('error')
         return
       }
-
-      const result = await MiniKit.commandsAsync.verify({
+      const { ResponseEvent } = await import('@worldcoin/minikit-js') as any
+      MiniKit.subscribe(ResponseEvent.MiniAppVerifyAction, async (payload: any) => {
+        MiniKit.unsubscribe(ResponseEvent.MiniAppVerifyAction)
+        if (payload.status === 'error') {
+          setErrorMsg('Error: ' + payload.error_code)
+          setStatus('error')
+          return
+        }
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload }),
+        })
+        if (res.ok) {
+          setStatus('success')
+          setTimeout(() => router.push('/home'), 1200)
+        } else {
+          setErrorMsg('Server verification failed')
+          setStatus('error')
+        }
+      })
+      MiniKit.commands.verify({
         action: 'worldx-verify',
         verification_level: 'device',
       })
-
-      console.log('Verify result:', JSON.stringify(result))
-
-      if (!result || !result.finalPayload) {
-        setErrorMsg('No response from World App')
-        setStatus('error')
-        return
-      }
-
-      if (result.finalPayload.status === 'error') {
-        setErrorMsg('Error: ' + JSON.stringify(result.finalPayload))
-        setStatus('error')
-        return
-      }
-
-      const res = await fetch('/api/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: result.finalPayload }),
-      })
-
-      const data = await res.json()
-      console.log('API response:', JSON.stringify(data))
-
-      if (res.ok) {
-        setStatus('success')
-        setTimeout(() => router.push('/home'), 1200)
-      } else {
-        setErrorMsg('API error: ' + JSON.stringify(data))
-        setStatus('error')
-      }
     } catch (e: any) {
-      setErrorMsg('Exception: ' + e?.message)
+      setErrorMsg('Error: ' + e?.message)
       setStatus('error')
     }
   }
@@ -78,17 +65,12 @@ export default function VerifyPage() {
           <div className="w-12 h-12 rounded-full border-2 border-white opacity-60" />
         )}
       </div>
-
       <h1 className="text-2xl font-medium text-black text-center mb-2">
         {status === 'success' ? 'Verified!' : 'Verify with World ID'}
       </h1>
-
       <p className="text-gray-400 text-sm text-center mb-10 max-w-xs">
-        {status === 'success'
-          ? 'Taking you to WorldX...'
-          : "We use World ID to confirm you are a unique human. No personal data is stored."}
+        {status === 'success' ? 'Taking you to WorldX...' : 'Verify you are a unique human to continue.'}
       </p>
-
       {status !== 'success' && (
         <button
           onClick={handleVerify}
@@ -100,19 +82,13 @@ export default function VerifyPage() {
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Verifying...
             </span>
-          ) : (
-            'Verify with World ID'
-          )}
+          ) : 'Verify with World ID'}
         </button>
       )}
-
       {status === 'error' && (
         <p className="text-red-400 text-xs mt-4 text-center break-all px-2">{errorMsg}</p>
       )}
-
-      <p className="text-gray-300 text-xs mt-10 text-center">
-        Powered by Worldcoin
-      </p>
+      <p className="text-gray-300 text-xs mt-10 text-center">Powered by Worldcoin</p>
     </div>
   )
 }

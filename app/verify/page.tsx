@@ -21,38 +21,25 @@ export default function VerifyPage() {
         return
       }
 
-      MiniKit.subscribe('miniapp-verify-action', async (payload: any) => {
-        MiniKit.unsubscribe('miniapp-verify-action')
-        if (payload.status === 'error') {
-          setErrorMsg('Error: ' + payload.error_code)
-          setStatus('error')
-          return
-        }
-        const res = await fetch('/api/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload }),
-        })
-        if (res.ok) {
-          setStatus('success')
-          setTimeout(() => router.push('/home'), 1200)
-        } else {
-          setErrorMsg('Server verification failed')
-          setStatus('error')
-        }
+      const result = await MiniKit.walletAuth({
+        nonce: Math.random().toString(36).substring(2),
+        statement: 'Sign in to WorldX',
       })
 
-      MiniKit.verify({
-        action: 'worldx-verify',
-        verification_level: 'device',
-      })
+      if (!result || result.status === 'error') {
+        setErrorMsg('Auth failed: ' + JSON.stringify(result))
+        setStatus('error')
+        return
+      }
+
+      setStatus('success')
+      setTimeout(() => router.push('/home'), 1200)
 
     } catch (e: any) {
       setErrorMsg('Error: ' + e?.message)
       setStatus('error')
     }
   }
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
       <div className={`w-24 h-24 rounded-full border-2 flex items-center justify-center mb-8 transition-colors duration-500 ${

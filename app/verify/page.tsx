@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IDKitWidget } from '@worldcoin/idkit'
+import { IDKit } from '@worldcoin/idkit'
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -30,7 +30,7 @@ export default function VerifyPage() {
         Verify you are a unique human to continue.
       </p>
 
-      <IDKitWidget
+      <IDKit
         app_id={process.env.NEXT_PUBLIC_APP_ID as `app_${string}`}
         action="worldx-verify"
         verification_level="device"
@@ -44,7 +44,7 @@ export default function VerifyPage() {
             Verify with World ID
           </button>
         )}
-      </IDKitWidget>
+      </IDKit>
 
       {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
       <p className="text-gray-300 text-xs mt-10 text-center">Powered by Worldcoin</p>

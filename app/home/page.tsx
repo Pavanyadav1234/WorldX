@@ -2,23 +2,20 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-const holdings = [
-  { symbol: 'WLD', name: 'Worldcoin', amount: 245.50, id: 'worldcoin' },
-  { symbol: 'BTC', name: 'Bitcoin', amount: 0.0042, id: 'bitcoin' },
-  { symbol: 'ETH', name: 'Ethereum', amount: 0.124, id: 'ethereum' },
-  { symbol: 'SOL', name: 'Solana', amount: 2.80, id: 'solana' },
-  { symbol: 'USDC', name: 'USD Coin', amount: 932.00, id: 'usd-coin' },
-]
-
 export default function HomePage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('Portfolio')
+  const [address, setAddress] = useState('')
+  const [balance, setBalance] = useState<any>(null)
   const [prices, setPrices] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('Portfolio')
 
   useEffect(() => {
-    const ids = holdings.map(h => h.id).join(',')
-    fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`)
+    const addr = localStorage.getItem('worldx_address') || ''
+    setAddress(addr)
+
+    // Fetch real prices
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=worldcoin-wld,bitcoin,ethereum,solana,usd-coin&vs_currencies=usd&include_24hr_change=true')
       .then(r => r.json())
       .then(data => {
         setPrices(data)
@@ -27,19 +24,7 @@ export default function HomePage() {
       .catch(() => setLoading(false))
   }, [])
 
-  const assets = holdings.map(h => {
-    const price = prices[h.id]?.usd ?? 0
-    const change = prices[h.id]?.usd_24h_change ?? 0
-    return {
-      ...h,
-      price,
-      value: h.amount * price,
-      change: change.toFixed(2),
-      positive: change >= 0,
-    }
-  })
-
-  const total = assets.reduce((sum, a) => sum + a.value, 0)
+  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'
 
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
@@ -48,17 +33,19 @@ export default function HomePage() {
           <p className="text-xs text-gray-400 uppercase tracking-widest">WorldX</p>
           <h1 className="text-2xl font-medium text-black mt-0.5">My Wallet</h1>
         </div>
-        <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center text-white text-sm font-medium">P</div>
+        <div className="text-right">
+          <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center text-white text-xs font-medium">
+            {address ? address.slice(2, 4).toUpperCase() : 'W'}
+          </div>
+        </div>
       </div>
 
       <div className="mx-5 bg-black rounded-3xl p-6 mb-5">
-        <p className="text-gray-500 text-xs mb-1">Total portfolio value</p>
-        <p className="text-white text-4xl font-medium tracking-tight">
-          {loading ? '...' : `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-        </p>
-        <div className="flex items-center gap-2 mt-4 bg-white/10 rounded-full px-3 py-1.5 w-fit">
-          <div className="w-2 h-2 rounded-full bg-white" />
-          <span className="text-white text-xs">Verified · World ID</span>
+        <p className="text-gray-500 text-xs mb-1">Wallet address</p>
+        <p className="text-white text-sm font-mono mb-3">{shortAddress}</p>
+        <div className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5 w-fit">
+          <div className="w-2 h-2 rounded-full bg-green-400" />
+          <span className="text-white text-xs">Connected · World App</span>
         </div>
         <div className="flex gap-2 mt-4">
           {['Deposit', 'Withdraw', 'Swap'].map((a) => (
@@ -79,29 +66,48 @@ export default function HomePage() {
         ))}
       </div>
 
-      <div className="flex-1 px-5 flex flex-col gap-3">
+      <div className="flex-1 px-5">
         {loading ? (
           <p className="text-center text-gray-400 text-sm mt-8">Loading live prices...</p>
         ) : (
-          assets.map((asset) => (
-            <div key={asset.symbol} onClick={() => router.push('/trade')} className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3.5 cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
-                  <span className="text-xs font-medium text-white">{asset.symbol.slice(0, 1)}</span>
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-gray-400 uppercase tracking-widest">Live market prices</p>
+            {[
+              { id: 'worldcoin-wld', symbol: 'WLD', name: 'Worldcoin' },
+              { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+              { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+              { id: 'solana', symbol: 'SOL', name: 'Solana' },
+              { id: 'usd-coin', symbol: 'USDC', name: 'USD Coin' },
+            ].map((coin) => {
+              const price = prices[coin.id]?.usd ?? 0
+              const change = prices[coin.id]?.usd_24h_change ?? 0
+              return (
+                <div
+                  key={coin.symbol}
+                  onClick={() => router.push('/trade')}
+                  className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3.5 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">{coin.symbol.slice(0, 1)}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-black">{coin.name}</p>
+                      <p className="text-xs text-gray-400">{coin.symbol}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-black">
+                      ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <p className={`text-xs ${change >= 0 ? 'text-green-500' : 'text-red-400'}`}>
+                      {change >= 0 ? '▲' : '▼'} {Math.abs(change).toFixed(2)}%
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-black">{asset.name}</p>
-                  <p className="text-xs text-gray-400">{asset.amount} {asset.symbol}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-black">${asset.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <p className={`text-xs ${asset.positive ? 'text-green-500' : 'text-red-400'}`}>
-                  {asset.positive ? '▲' : '▼'} {Math.abs(Number(asset.change))}%
-                </p>
-              </div>
-            </div>
-          ))
+              )
+            })}
+          </div>
         )}
       </div>
 

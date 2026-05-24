@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 export default function VerifyPage() {
   const router = useRouter()
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [error, setError] = useState('')
 
   async function handleVerify() {
@@ -12,21 +12,35 @@ export default function VerifyPage() {
     try {
       const { MiniKit } = await import('@worldcoin/minikit-js') as any
       if (!MiniKit.isInstalled()) {
-        router.push('/home')
+        setError('Please open inside World App')
+        setStatus('error')
         return
       }
+
+      const nonce = Math.random().toString(36).substring(2)
       const result = await MiniKit.walletAuth({
-        nonce: Math.random().toString(36).substring(2),
-        statement: 'Sign in to WorldX',
+        nonce,
+        statement: 'Sign in to WorldX crypto trading app',
       })
-      if (result?.finalPayload?.status !== 'error') {
-        setStatus('done')
-        router.push('/home')
-      } else {
-        router.push('/home')
+
+      console.log('walletAuth result:', JSON.stringify(result))
+
+      if (result?.finalPayload?.status === 'error') {
+        setError('Sign in failed')
+        setStatus('error')
+        return
       }
-    } catch {
+
+      // Save wallet address to localStorage
+      const address = result?.finalPayload?.address || MiniKit.walletAddress
+      if (address) {
+        localStorage.setItem('worldx_address', address)
+      }
+
       router.push('/home')
+    } catch (e: any) {
+      setError('Error: ' + e?.message)
+      setStatus('error')
     }
   }
 
@@ -35,17 +49,25 @@ export default function VerifyPage() {
       <div className="w-24 h-24 rounded-full border-2 border-black bg-black flex items-center justify-center mb-8">
         <div className="w-12 h-12 rounded-full border-2 border-white opacity-60" />
       </div>
-      <h1 className="text-2xl font-medium text-black text-center mb-2">Sign in with World App</h1>
+      <h1 className="text-2xl font-medium text-black text-center mb-2">
+        Sign in with World App
+      </h1>
       <p className="text-gray-400 text-sm text-center mb-10 max-w-xs">
-        Connect your World wallet to start trading.
+        Connect your World wallet to start trading on WorldX.
       </p>
       <button
         onClick={handleVerify}
         disabled={status === 'loading'}
         className="w-full max-w-xs bg-black text-white py-4 rounded-2xl text-base font-medium disabled:opacity-40"
       >
-        {status === 'loading' ? 'Connecting...' : 'Connect World Wallet'}
+        {status === 'loading' ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Connecting...
+          </span>
+        ) : 'Connect World Wallet'}
       </button>
+      {error && <p className="text-red-400 text-sm mt-4 text-center">{error}</p>}
       <p className="text-gray-300 text-xs mt-10 text-center">Powered by Worldcoin</p>
     </div>
   )

@@ -1,27 +1,39 @@
 'use client'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IDKitRequestWidget } from '@worldcoin/idkit'
+import { IDKitRequestWidget, useIDKitRequest } from '@worldcoin/idkit'
 
 export default function VerifyPage() {
   const router = useRouter()
-  const [error, setError] = useState('')
 
-  async function onSuccess(proof: any) {
-    const res = await fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payload: proof }),
-    })
-    if (res.ok) {
-      router.push('/home')
-    } else {
-      setError('Verification failed')
-    }
-  }
+  const { open, isOpen } = useIDKitRequest({
+    app_id: process.env.NEXT_PUBLIC_APP_ID as `app_${string}`,
+    action: 'worldx-verify',
+    onSuccess: async (proof: any) => {
+      const res = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: proof }),
+      })
+      if (res.ok) router.push('/home')
+    },
+  })
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
+      <IDKitRequestWidget
+        open={isOpen}
+        onOpenChange={() => {}}
+        handleVerify={async () => {}}
+        onSuccess={async (proof: any) => {
+          const res = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payload: proof }),
+          })
+          if (res.ok) router.push('/home')
+        }}
+      />
+
       <div className="w-24 h-24 rounded-full border-2 border-black bg-black flex items-center justify-center mb-8">
         <div className="w-12 h-12 rounded-full border-2 border-white opacity-60" />
       </div>
@@ -30,22 +42,13 @@ export default function VerifyPage() {
         Verify you are a unique human to continue.
       </p>
 
-      <IDKitRequestWidget
-        app_id={process.env.NEXT_PUBLIC_APP_ID as `app_${string}`}
-        action="worldx-verify"
-        onSuccess={onSuccess}
+      <button
+        onClick={open}
+        className="w-full max-w-xs bg-black text-white py-4 rounded-2xl text-base font-medium"
       >
-        {({ open }) => (
-          <button
-            onClick={open}
-            className="w-full max-w-xs bg-black text-white py-4 rounded-2xl text-base font-medium"
-          >
-            Verify with World ID
-          </button>
-        )}
-      </IDKitRequestWidget>
+        Verify with World ID
+      </button>
 
-      {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
       <p className="text-gray-300 text-xs mt-10 text-center">Powered by Worldcoin</p>
     </div>
   )

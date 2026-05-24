@@ -17,22 +17,16 @@ export default function VerifyPage() {
         return
       }
 
-      const nonce = Math.random().toString(36).substring(2)
       const result = await MiniKit.walletAuth({
-        nonce,
+        nonce: Math.random().toString(36).substring(2),
         statement: 'Sign in to WorldX crypto trading app',
       })
 
-      console.log('walletAuth result:', JSON.stringify(result))
-
-      if (result?.finalPayload?.status === 'error') {
-        setError('Sign in failed')
-        setStatus('error')
-        return
-      }
-
-      // Save wallet address to localStorage
-      const address = result?.finalPayload?.address || MiniKit.walletAddress
+      // Save wallet address
+      const address = result?.finalPayload?.address 
+        || MiniKit.walletAddress 
+        || ''
+      
       if (address) {
         localStorage.setItem('worldx_address', address)
       }

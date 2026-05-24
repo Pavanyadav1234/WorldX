@@ -11,10 +11,18 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('Portfolio')
 
   useEffect(() => {
-    const addr = localStorage.getItem('worldx_address') || ''
-    setAddress(addr)
+    const getAddress = async () => {
+      try {
+        const { MiniKit } = await import('@worldcoin/minikit-js') as any
+        const addr = MiniKit.walletAddress || localStorage.getItem('worldx_address') || ''
+        setAddress(addr)
+      } catch {
+        const addr = localStorage.getItem('worldx_address') || ''
+        setAddress(addr)
+      }
+    }
+    getAddress()
 
-    // Fetch real prices
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=worldcoin-wld,bitcoin,ethereum,solana,usd-coin&vs_currencies=usd&include_24hr_change=true')
       .then(r => r.json())
       .then(data => {

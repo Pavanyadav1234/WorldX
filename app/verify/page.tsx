@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IDKitWidget, VerificationLevel } from '@worldcoin/idkit'
+import { IDKitWidget } from '@worldcoin/idkit'
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -33,7 +33,7 @@ export default function VerifyPage() {
       <IDKitWidget
         app_id={process.env.NEXT_PUBLIC_APP_ID as `app_${string}`}
         action="worldx-verify"
-        verification_level={VerificationLevel.Device}
+        verification_level="device"
         onSuccess={onSuccess}
       >
         {({ open }) => (
